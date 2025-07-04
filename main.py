@@ -14,6 +14,7 @@ from utils.logger import Logger
 from database.connection_manager import ConnectionManager
 from database.structure_analyzer import StructureAnalyzer
 from database.replicator import Replicator
+from utils.data_sync_menu import DataSyncMenu
 
 # Inicializar colorama para Windows
 init(autoreset=True)
@@ -27,6 +28,7 @@ class DatabaseReplicatorApp:
         self.structure_analyzer = StructureAnalyzer(self.logger)
         self.replicator = Replicator(self.logger)
         self.menu = Menu(self.logger)
+        self.data_sync_menu = DataSyncMenu(self.logger, self.connection_manager)
         
         # Criar diretórios necessários
         self._create_directories()
@@ -54,8 +56,10 @@ class DatabaseReplicatorApp:
                 elif choice == '5':
                     self._replicate_structure()
                 elif choice == '6':
-                    self._view_logs()
+                    self._data_synchronization()
                 elif choice == '7':
+                    self._view_logs()
+                elif choice == '8':
                     self._backup_management()
                 elif choice == '0':
                     self._exit_application()
@@ -316,6 +320,10 @@ class DatabaseReplicatorApp:
         
         print(f"{Fore.YELLOW}Funcionalidade de restauração será implementada em versão futura.{Style.RESET_ALL}")
         print(f"{Fore.YELLOW}Por segurança, use ferramentas específicas do MySQL/MariaDB para restauração.{Style.RESET_ALL}")
+    
+    def _data_synchronization(self):
+        """Menu de sincronização de dados"""
+        self.data_sync_menu.show_data_sync_menu()
     
     def _exit_application(self):
         """Sair da aplicação"""

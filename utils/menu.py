@@ -37,15 +37,16 @@ class Menu:
             ["3", "Diagnosticar Sistema", "Diagnóstico completo de conexões"],
             ["4", "Analisar Estruturas", "Comparar estruturas dos bancos"],
             ["5", "Replicar Estrutura", "Executar replicação da estrutura"],
-            ["6", "Visualizar Logs", "Ver histórico de operações"],
-            ["7", "Gerenciar Backups", "Criar e gerenciar backups"],
+            ["6", "Sincronizar Dados", "Sincronizar dados entre ambientes"],
+            ["7", "Visualizar Logs", "Ver histórico de operações"],
+            ["8", "Gerenciar Backups", "Criar e gerenciar backups"],
             ["0", "Sair", "Encerrar aplicação"]
         ]
         
         print(tabulate(options, headers=["Opção", "Ação", "Descrição"], 
                       tablefmt="grid", colalign=("center", "left", "left")))
         
-        choice = input(f"\n{Fore.CYAN}Escolha uma opção (0-7): {Style.RESET_ALL}").strip()
+        choice = input(f"\n{Fore.CYAN}Escolha uma opção (0-8): {Style.RESET_ALL}").strip()
         return choice
     
     def show_connection_menu(self):
