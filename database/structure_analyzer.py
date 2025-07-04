@@ -236,7 +236,8 @@ class StructureAnalyzer:
             'new_tables': [],
             'missing_tables': [],
             'modified_tables': {},
-            'identical_tables': []
+            'identical_tables': [],
+            'index_differences': {}
         }
         
         # Verificar se as estruturas são válidas
@@ -268,13 +269,69 @@ class StructureAnalyzer:
                 target_structure['tables'][table_name]
             )
             
-            if table_diff['has_differences']:
+            # Separar diferenças estruturais de diferenças de índices
+            structural_differences = (
+                len(table_diff['new_columns']) > 0 or
+                len(table_diff['removed_columns']) > 0 or
+                len(table_diff['modified_columns']) > 0 or
+                table_diff['column_order_changed'] or
+                table_diff['table_properties_changed']
+            )
+            
+            if structural_differences:
                 differences['modified_tables'][table_name] = table_diff
             else:
-                differences['identical_tables'].append(table_name)
+                # Verificar apenas diferenças de índices
+                index_diff = self._compare_table_indexes(
+                    source_structure['tables'][table_name],
+                    target_structure['tables'][table_name]
+                )
+                
+                if index_diff['has_differences']:
+                    differences['index_differences'][table_name] = index_diff
+                else:
+                    differences['identical_tables'].append(table_name)
         
         self.logger.operation_end("Comparação de estruturas", True)
         return differences
+    
+    def _compare_table_indexes(self, source_table, target_table):
+        """Comparar índices de duas tabelas"""
+        diff = {
+            'has_differences': False,
+            'missing_indexes': [],
+            'extra_indexes': []
+        }
+        
+        source_indexes = source_table.get('indexes', {})
+        target_indexes = target_table.get('indexes', {})
+        
+        # Índices que existem na origem mas não no destino
+        for index_name, index_info in source_indexes.items():
+            if index_name == 'PRIMARY':
+                continue  # Pular chave primária
+                
+            if index_name not in target_indexes:
+                diff['missing_indexes'].append({
+                    'name': index_name,
+                    'info': index_info
+                })
+        
+        # Índices que existem no destino mas não na origem
+        for index_name, index_info in target_indexes.items():
+            if index_name == 'PRIMARY':
+                continue  # Pular chave primária
+                
+            if index_name not in source_indexes:
+                diff['extra_indexes'].append({
+                    'name': index_name,
+                    'info': index_info
+                })
+        
+        diff['has_differences'] = (len(diff['missing_indexes']) > 0 or 
+                                 len(diff['extra_indexes']) > 0)
+        
+        return diff
     
     def _compare_table_structures(self, source_table, target_table):
         """Comparar estrutura de duas tabelas"""
@@ -286,6 +343,8 @@ class StructureAnalyzer:
             'column_order_changed': False,
             'table_properties_changed': False
         }
+        
+        self.logger.debug(f"COMPARANDO TABELAS - Origem tem {len(source_table['columns'])} colunas, Destino tem {len(target_table['columns'])} colunas")
         
         # Comparar colunas
         source_columns = {col['name']: col for col in source_table['columns']}
@@ -302,13 +361,28 @@ class StructureAnalyzer:
         
         # Colunas modificadas
         common_columns = source_col_names & target_col_names
+        self.logger.debug(f"COMPARANDO {len(common_columns)} colunas comuns")
+        
         for col_name in common_columns:
-            if not self._columns_are_identical(source_columns[col_name], target_columns[col_name]):
+            source_col = source_columns[col_name]
+            target_col = target_columns[col_name]
+            
+            self.logger.debug(f"COMPARANDO COLUNA '{col_name}'")
+            
+            if not self._columns_are_identical(source_col, target_col):
+                self.logger.debug(f"Detectada diferença na coluna '{col_name}' da tabela")
+                self.logger.debug(f"  Origem: type={source_col['column_type']}, null={source_col['nullable']}, default={source_col['default']}, extra={source_col['extra']}, key={source_col['key']}")
+                self.logger.debug(f"  Destino: type={target_col['column_type']}, null={target_col['nullable']}, default={target_col['default']}, extra={target_col['extra']}, key={target_col['key']}")
+                
                 diff['modified_columns'].append({
                     'name': col_name,
-                    'source': source_columns[col_name],
-                    'target': target_columns[col_name]
+                    'source': source_col,
+                    'target': target_col
                 })
+            else:
+                self.logger.debug(f"COLUNA '{col_name}' é IDÊNTICA")
+
+        # ...existing code...
         
         # Verificar ordem das colunas
         source_order = [col['name'] for col in source_table['columns']]
@@ -356,14 +430,25 @@ class StructureAnalyzer:
         default1 = self._normalize_default_value(col1['default'], col1['column_type'], col1['nullable'])
         default2 = self._normalize_default_value(col2['default'], col2['column_type'], col2['nullable'])
         
-        # Comparar propriedades importantes
-        return (
+        # Logs detalhados para debug
+        identical = (
             col1['column_type'] == col2['column_type'] and
             col1['nullable'] == col2['nullable'] and
             default1 == default2 and
             col1['extra'] == col2['extra'] and
             col1['key'] == col2['key']
         )
+        
+        # Log de debug para entender diferenças
+        if not identical:
+            self.logger.debug(f"COLUNA DIFERENTE: {col1.get('name', 'UNKNOWN')}")
+            self.logger.debug(f"  Tipo: {col1['column_type']} vs {col2['column_type']} = {col1['column_type'] == col2['column_type']}")
+            self.logger.debug(f"  Nullable: {col1['nullable']} vs {col2['nullable']} = {col1['nullable'] == col2['nullable']}")
+            self.logger.debug(f"  Default: '{default1}' vs '{default2}' = {default1 == default2}")
+            self.logger.debug(f"  Extra: '{col1['extra']}' vs '{col2['extra']}' = {col1['extra'] == col2['extra']}")
+            self.logger.debug(f"  Key: '{col1['key']}' vs '{col2['key']}' = {col1['key'] == col2['key']}")
+        
+        return identical
     
     def display_differences(self, differences):
         """Exibir diferenças encontradas"""
@@ -383,7 +468,7 @@ class StructureAnalyzer:
         
         # Tabelas modificadas
         if differences['modified_tables']:
-            print(f"\n{Fore.MAGENTA}TABELAS COM DIFERENÇAS:{Style.RESET_ALL}")
+            print(f"\n{Fore.MAGENTA}TABELAS COM DIFERENÇAS ESTRUTURAIS:{Style.RESET_ALL}")
             for table_name, table_diff in differences['modified_tables'].items():
                 print(f"\n  {Fore.MAGENTA}Tabela: {table_name}{Style.RESET_ALL}")
                 
@@ -402,6 +487,20 @@ class StructureAnalyzer:
                 if table_diff['table_properties_changed']:
                     print(f"    {Fore.BLUE}Propriedades da tabela alteradas{Style.RESET_ALL}")
         
+        # Diferenças de índices
+        if differences.get('index_differences'):
+            print(f"\n{Fore.BLUE}TABELAS COM DIFERENÇAS DE ÍNDICES:{Style.RESET_ALL}")
+            for table_name, index_diff in differences['index_differences'].items():
+                print(f"\n  {Fore.BLUE}Tabela: {table_name}{Style.RESET_ALL}")
+                
+                if index_diff['missing_indexes']:
+                    missing_names = [idx['name'] for idx in index_diff['missing_indexes']]
+                    print(f"    {Fore.YELLOW}Índices faltantes: {', '.join(missing_names)}{Style.RESET_ALL}")
+                
+                if index_diff['extra_indexes']:
+                    extra_names = [idx['name'] for idx in index_diff['extra_indexes']]
+                    print(f"    {Fore.CYAN}Índices extras: {', '.join(extra_names)}{Style.RESET_ALL}")
+        
         # Tabelas idênticas
         if differences['identical_tables']:
             print(f"\n{Fore.GREEN}TABELAS IDÊNTICAS ({len(differences['identical_tables'])}):{Style.RESET_ALL}")
@@ -409,16 +508,22 @@ class StructureAnalyzer:
                 print(f"  {Fore.GREEN}✓ {table}{Style.RESET_ALL}")
         
         # Resumo
-        total_changes = (len(differences['new_tables']) + 
-                        len(differences['modified_tables']))
+        total_structural_changes = (len(differences['new_tables']) + 
+                                  len(differences['modified_tables']))
+        total_index_changes = len(differences.get('index_differences', {}))
+        total_changes = total_structural_changes + total_index_changes
         
         print(f"\n{Fore.CYAN}=== RESUMO ==={Style.RESET_ALL}")
         print(f"Tabelas a serem criadas: {Fore.GREEN}{len(differences['new_tables'])}{Style.RESET_ALL}")
-        print(f"Tabelas a serem modificadas: {Fore.YELLOW}{len(differences['modified_tables'])}{Style.RESET_ALL}")
+        print(f"Tabelas com diferenças estruturais: {Fore.YELLOW}{len(differences['modified_tables'])}{Style.RESET_ALL}")
+        print(f"Tabelas com diferenças de índices: {Fore.BLUE}{total_index_changes}{Style.RESET_ALL}")
         print(f"Tabelas idênticas: {Fore.GREEN}{len(differences['identical_tables'])}{Style.RESET_ALL}")
         print(f"Total de alterações necessárias: {Fore.CYAN}{total_changes}{Style.RESET_ALL}")
         
         if total_changes == 0:
             print(f"\n{Fore.GREEN}✓ As estruturas estão sincronizadas!{Style.RESET_ALL}")
         else:
-            print(f"\n{Fore.YELLOW}⚠ Replicação necessária para {total_changes} item(s){Style.RESET_ALL}")
+            if total_structural_changes > 0:
+                print(f"\n{Fore.YELLOW}⚠ Replicação necessária para {total_structural_changes} alteração(ões) estrutural(is){Style.RESET_ALL}")
+            if total_index_changes > 0:
+                print(f"{Fore.BLUE}ℹ {total_index_changes} diferença(s) de índices serão corrigidas automaticamente{Style.RESET_ALL}")

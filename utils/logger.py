@@ -29,7 +29,7 @@ class Logger:
         
         # Configurar logger
         logging.basicConfig(
-            level=logging.INFO,
+            level=logging.DEBUG,  # Mudado de INFO para DEBUG
             format=log_format,
             handlers=[
                 logging.FileHandler(log_file, encoding='utf-8'),
@@ -144,3 +144,37 @@ class Logger:
                     })
         
         return sorted(log_files, key=lambda x: x['modified'], reverse=True)
+    
+    def get_recent_operations(self, minutes=5):
+        """Obter operações recentes dos logs"""
+        try:
+            today = datetime.datetime.now().strftime('%Y-%m-%d')
+            log_file = os.path.join(self.logs_dir, f"replicator_{today}.log")
+            
+            if not os.path.exists(log_file):
+                return []
+            
+            cutoff_time = datetime.datetime.now() - datetime.timedelta(minutes=minutes)
+            recent_operations = []
+            
+            with open(log_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    
+                    # Extrair timestamp da linha de log
+                    try:
+                        timestamp_str = line.split(' - ')[0]
+                        log_time = datetime.datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S,%f')
+                        
+                        if log_time >= cutoff_time:
+                            recent_operations.append(line)
+                    except (ValueError, IndexError):
+                        continue
+            
+            return recent_operations
+            
+        except Exception as e:
+            self.error(f"Erro ao obter operações recentes: {str(e)}")
+            return []
