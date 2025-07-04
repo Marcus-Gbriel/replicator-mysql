@@ -268,6 +268,12 @@ class Replicator:
                     cursor.execute("COMMIT")
                     self.logger.success(f"Todas as {successful_operations} operações concluídas com sucesso")
                     
+                    # Sincronizar índices das tabelas modificadas
+                    for table_name in differences['modified_tables'].keys():
+                        self._sync_table_indexes(target_connection, source_structure, 
+                                               self.structure_analyzer.analyze_database_structure(target_connection), 
+                                               table_name)
+                    
                 except Exception as e:
                     # Reverter em caso de erro
                     cursor.execute("ROLLBACK")
@@ -434,14 +440,21 @@ class Replicator:
                         sql += " DEFAULT NULL"
                     # Se não aceita NULL, não adicionar DEFAULT
                 else:
-                    sql += f" DEFAULT '{default_value}'"
+                    if default_value.upper() == 'NULL':
+                        sql += " DEFAULT NULL"
+                    else:
+                        sql += f" DEFAULT '{default_value}'"
             else:
-                # Para strings, usar o valor já formatado do banco
-                # Se já contém aspas, não adicionar mais
-                if default_value.startswith("'") and default_value.endswith("'"):
+                # Para strings e outros tipos
+                if default_value.upper() == 'NULL':
+                    sql += " DEFAULT NULL"
+                elif default_value.startswith("'") and default_value.endswith("'"):
                     sql += f" DEFAULT {default_value}"
                 else:
                     sql += f" DEFAULT '{default_value}'"
+        elif column_info['nullable']:
+            # Se é nullable e não tem default explícito, definir como NULL
+            sql += " DEFAULT NULL"
         
         if column_info['extra']:
             sql += f" {column_info['extra']}"
@@ -497,3 +510,42 @@ class Replicator:
                     backups.append(f"{file} ({file_size} bytes) - {file_modified}")
         
         return sorted(backups, reverse=True)
+    
+    def _sync_table_indexes(self, target_connection, source_structure, target_structure, table_name):
+        """Sincronizar índices de uma tabela específica"""
+        try:
+            connection = self._create_connection(target_connection)
+            if not connection:
+                return False
+            
+            source_table = source_structure['tables'][table_name]
+            target_table = target_structure['tables'][table_name]
+            
+            source_indexes = source_table.get('indexes', {})
+            target_indexes = target_table.get('indexes', {})
+            
+            with connection.cursor() as cursor:
+                # Verificar índices que existem na origem mas não no destino
+                for index_name, index_info in source_indexes.items():
+                    if index_name == 'PRIMARY':
+                        continue  # Pular chave primária
+                    
+                    if index_name not in target_indexes:
+                        # Criar índice faltante
+                        columns_str = '`, `'.join(index_info['columns'])
+                        unique_str = 'UNIQUE ' if index_info['unique'] else ''
+                        
+                        create_index_sql = f"CREATE {unique_str}INDEX `{index_name}` ON `{table_name}` (`{columns_str}`)"
+                        
+                        try:
+                            cursor.execute(create_index_sql)
+                            self.logger.success(f"Índice {index_name} criado na tabela {table_name}")
+                        except Exception as e:
+                            self.logger.warning(f"Erro ao criar índice {index_name}: {str(e)}")
+            
+            connection.close()
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Erro ao sincronizar índices da tabela {table_name}: {str(e)}")
+            return False

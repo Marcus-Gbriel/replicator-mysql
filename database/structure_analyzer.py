@@ -338,13 +338,29 @@ class StructureAnalyzer:
         
         return diff
     
+    def _normalize_default_value(self, default_value, column_type, nullable):
+        """Normalizar valores default problemáticos"""
+        if default_value is None:
+            return 'NULL' if nullable else None
+        
+        # Converter valores problemáticos de timestamp/datetime
+        if default_value in ['0000-00-00 00:00:00', '0000-00-00']:
+            if 'timestamp' in column_type.lower() or 'datetime' in column_type.lower():
+                return 'NULL' if nullable else None
+        
+        return default_value
+
     def _columns_are_identical(self, col1, col2):
         """Verificar se duas colunas são idênticas"""
+        # Normalizar valores default para comparação
+        default1 = self._normalize_default_value(col1['default'], col1['column_type'], col1['nullable'])
+        default2 = self._normalize_default_value(col2['default'], col2['column_type'], col2['nullable'])
+        
         # Comparar propriedades importantes
         return (
             col1['column_type'] == col2['column_type'] and
             col1['nullable'] == col2['nullable'] and
-            col1['default'] == col2['default'] and
+            default1 == default2 and
             col1['extra'] == col2['extra'] and
             col1['key'] == col2['key']
         )
