@@ -1,0 +1,497 @@
+# MySQL/MariaDB Structure Replicator - .gitignore
+
+# ========================================
+# Python
+# ========================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# ========================================
+# Aplicação Específica
+# ========================================
+
+# Logs da aplicação
+logs/
+*.log
+
+# Backups gerados
+backups/
+*.sql
+*.dump
+
+# Configurações locais com senhas
+config/connections.db
+config/*.db
+config/local_*
+config/.env
+
+# Dados sensíveis
+*.key
+*.pem
+*.crt
+secrets/
+.secrets/
+
+# Arquivos temporários do sistema
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Arquivos de cache da aplicação
+cache/
+.cache/
+
+# ========================================
+# IDEs e Editores
+# ========================================
+
+# Visual Studio Code
+.vscode/
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Atom
+.atom/
+
+# ========================================
+# Sistema Operacional
+# ========================================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ========================================
+# Controle de Versão
+# ========================================
+
+# Git
+.git/
+*.orig
+*.rej
+
+# ========================================
+# Arquivos de Desenvolvimento/Debug
+# ========================================
+
+# Arquivos de teste temporários
+test_*.py
+debug_*.py
+analyze_differences.py
+test_fix.py
+test_replication.py
+check_environment.py
+PROBLEMA_RESOLVIDO.md
+
+# Dados de desenvolvimento
+dev_data/
+sample_data/
+test_databases/
+
+# Arquivos de profiling
+*.prof
+*.profile
+
+# ========================================
+# Dependências e Build
+# ========================================
+
+# Node.js (se usado para ferramentas auxiliares)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Rust (se compilações nativas forem usadas)
+target/
+Cargo.lock
+
+# ========================================
+# Outros
+# ========================================
+
+# Arquivos comprimidos
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Arquivos de documentação gerados
+docs/build/
+*.pdf
+*.docx
+
+# Arquivos de configuração específicos do usuário
+user_config.json
+personal_settings.ini
+
+# Arquivos de monitoramento/métricas
+metrics/
+monitoring/
+stats/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# =============================================================================
+# ARQUIVOS ESPECÍFICOS DO PROJETO REPLICATOR
+# =============================================================================
+
+# Logs gerados pela aplicação
+logs/
+*.log
+
+# Backups criados pelo sistema
+backups/
+backup_*.sql
+
+# Configurações sensíveis (banco de dados SQLite)
+config/connections.db
+config/settings.db
+config/*.db
+
+# Arquivos de teste temporários
+test_*.py
+debug_*.py
+analyze_*.py
+check_*.py
+
+# Arquivos de configuração local
+local_config.ini
+.env.local
+
+# Arquivos temporários do sistema
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE e Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Windows
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# =============================================================================
+# MANTER APENAS OS ARQUIVOS ESSENCIAIS DO PROJETO
+# =============================================================================
+
+# Manter estrutura de diretórios vazios
+!logs/.gitkeep
+!backups/.gitkeep
+!config/.gitkeep
+
+# Manter exemplos de configuração (sem dados sensíveis)
+!CONFIG_EXAMPLES.md
